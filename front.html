@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Detection</title>
+    <link rel="stylesheet" href="style1.css">
+</head>
+<body>
+
+    <div id="videoContainer">
+        <video id="videoElement" autoplay playsinline></video>
+        <div id="outputText"></div>
+    </div>
+
+    <button id="generateSentenceButton">Generate Object Sentence</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script>
+        let videoElement = document.getElementById('videoElement');
+        let outputText = document.getElementById('outputText');
+        let generateButton = document.getElementById('generateSentenceButton');
+        
+        // Start the webcam stream
+        async function startWebcam() {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            videoElement.srcObject = stream;
+        }
+
+        // Capture image and send to backend for object detection
+        async function captureAndDetect() {
+            let canvas = document.createElement('canvas');
+            let context = canvas.getContext('2d');
+            context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            let imageData = canvas.toDataURL('image/jpeg');
+
+            // Send the captured frame to the backend (Flask server)
+            const response = await axios.post('http://127.0.0.1:5000/detect', { image: imageData });
+
+            if (response.data.sentence) {
+                outputText.textContent = response.data.sentence;
+            }
+        }
+
+        // Button to trigger object detection
+        generateButton.addEventListener('click', captureAndDetect);
+
+        // Start webcam on page load
+        window.onload = startWebcam;
+    </script>
+
+</body>
+</html>
